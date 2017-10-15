@@ -20,7 +20,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import java.util.ArrayList;
+import java.util.List;
 
+import static android.R.attr.data;
 import static android.support.v4.content.ContextCompat.startActivity;
 import static android.support.v7.widget.AppCompatDrawableManager.get;
 import static com.example.android.shoppingbasket.R.id.info;
@@ -59,6 +61,10 @@ public class AdapterItem extends ArrayAdapter<Item> implements View.OnClickListe
         return items.size();
     }
 
+    public ArrayList<Item> getList() {
+        return new ArrayList<Item>(items);
+    }
+
     public Item getItem(int position) {
         return items.get(position);
     }
@@ -86,9 +92,9 @@ public class AdapterItem extends ArrayAdapter<Item> implements View.OnClickListe
     private int lastPosition = -1;
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public View getView(final int position, View convertView,final ViewGroup parent) {
         // Get the data item for this position
-        Item dataModel = getItem(position);
+        final Item dataModel = getItem(position);
         // Check if an existing view is being reused, otherwise inflate the view
         ViewHolder viewHolder; // view lookup cache stored in tag
 
@@ -104,6 +110,15 @@ public class AdapterItem extends ArrayAdapter<Item> implements View.OnClickListe
             viewHolder.txtCost = (TextView) convertView.findViewById(R.id.cost);
             viewHolder.txtShop = (TextView) convertView.findViewById(R.id.shop);
             viewHolder.settings = (Button) convertView.findViewById(R.id.settings);
+            viewHolder.settings.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+//                    ((ListView) parent).performItemClick(view, position, 0);
+                    Intent toSettings = new Intent(parent.getContext(), settings.class);
+                        toSettings.putExtra("sampleObject",dataModel);
+                        parent.getContext().startActivity(toSettings);
+                }
+            });
             viewHolder.info = (CheckBox) convertView.findViewById(R.id.item_check);
             result=convertView;
             convertView.setTag(viewHolder);
@@ -118,13 +133,14 @@ public class AdapterItem extends ArrayAdapter<Item> implements View.OnClickListe
         viewHolder.txtCat.setText(dataModel.getCategory());
         viewHolder.txtCost.setText(String.valueOf(dataModel.getPrice()));
         viewHolder.txtShop.setText(dataModel.getShop());
-        viewHolder.settings.setOnClickListener(this);
-        viewHolder.settings.setTag(position);
+//        viewHolder.settings.setOnClickListener(this);
+//        viewHolder.settings.setTag(position);
         viewHolder.info.setOnClickListener(this);
         viewHolder.info.setTag(position);
         // Return the completed view to render on screen
         return convertView;
     }
+
 
 
 

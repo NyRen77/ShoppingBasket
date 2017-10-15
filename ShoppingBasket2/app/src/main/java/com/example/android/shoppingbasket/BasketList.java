@@ -2,8 +2,11 @@ package com.example.android.shoppingbasket;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -15,6 +18,10 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -32,16 +39,18 @@ public class BasketList extends AppCompatActivity {
     private EditText search;
     private Button scanBTN;
     private Button submitBTN;
+    private Button getSettingsBTN;
     private ListView listView;
     private  LinearLayout mainLayout;
     ArrayAdapter<Item> listViewAdapter;
     private static AdapterItem adapter;
-    ArrayList<Item> listItems = new ArrayList<>();
+    ArrayList<Item> listItems;
     static final String COST = "items_cost";
     static final String MONEY_VIEW = "money_view";
     static final String SEARCH = "search_text";
     static final String LISTITEMS = "listarray";
-
+    private static final String STATE_LIST = "State Adapter Data";
+    private String barCode;
     private CheckBox chcBox;
     private Button settingsBTN;
 
@@ -50,11 +59,28 @@ public class BasketList extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_basket_list);
 
+
+//        //If restoring from state, load the list from the bundle
+//        if (savedInstanceState != null) {
+//            ArrayList<Item> list = savedInstanceState.getParcelableArrayList(STATE_LIST);
+//            AdapterItem adapter = new MenuItemAdapter(list, getActivity(), this);
+//        }
+////        else {
+//            //Else we are creating our Activity from scratch, pull list from where ever you initially get it from
+//            ArrayList<Item> list = getInitData();
+//            ItemAdapter adapter = new MenuItemAdapter(list, getActivity(), this);
+//        }
         Intent i = getIntent();
         Bundle extras = getIntent().getExtras();
 
         if (extras != null) {
-            listItems = (ArrayList<Item>) i.getSerializableExtra("sampleObject");
+            String className = getIntent().getStringExtra("Class");
+            if(className.equals("main")) {
+                listItems = (ArrayList<Item>) i.getSerializableExtra("sampleObject");
+            } else if (className.equals("singleitem")) {
+                Item temp = (Item) i.getSerializableExtra("item");
+                listItems.add(temp);
+            }
         }
 
         moneyView = (TextView)findViewById(R.id.moneyTxt);
@@ -70,8 +96,11 @@ public class BasketList extends AppCompatActivity {
         scanBTN.setOnClickListener(new View.OnClickListener() {
                                       @Override
                                       public void onClick(View v) {
-                                          Intent toNewItem = new Intent(BasketList.this, newItem.class);
-                                          startActivity(toNewItem);
+//                                          Intent toNewItem = new Intent(BasketList.this, newItem.class);
+//                                          startActivity(toNewItem);
+                                          IntentIntegrator scanIntegrator = new IntentIntegrator(BasketList.this);
+                                          scanIntegrator.initiateScan();
+
                                       }
                                   });
         submitBTN = (Button)findViewById(R.id.submit);
@@ -88,7 +117,7 @@ public class BasketList extends AppCompatActivity {
                                        }
                                      });
 
-        listView = (ListView) findViewById(R.id.shoppingList);
+//        listView = (ListView) findViewById(R.id.shoppingList);
 //        listViewAdapter = new ArrayAdapter<>(this,
 //                android.R.layout.simple_list_item_1,
 //                listItems);
@@ -98,22 +127,67 @@ public class BasketList extends AppCompatActivity {
         listView.setAdapter(adapter);
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
             @Override
             public void onItemClick(AdapterView<?> parent, View view,
                                     int position, long id) {
-                Item Items = listItems.get(position);
+                final Item items = listItems.get(position);
+
                 settingsBTN = (Button)findViewById(R.id.settings);
                 settingsBTN.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         Intent toSettings = new Intent(BasketList.this, settings.class);
-//                        toSettings.putExtra("sampleObject",listItems);
+                        toSettings.putExtra("sampleObject",items);
                         startActivity(toSettings);
                     }
                 });
             }
         });
     }
+
+    public void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        IntentResult scanningResult = IntentIntegrator.parseActivityResult(requestCode, resultCode, intent);
+        if (scanningResult != null) {
+            barCode = scanningResult.getContents();
+//            String scanFormat = scanningResult.getFormatName();
+//            formatTxt.setText("FORMAT: " + scanFormat);
+//            contentTxt.setText("CONTENT: " + barCode);
+            Item temp = new Item();
+            temp.Item("", barCode, "", 0, "");
+            Intent toSettings = new Intent(BasketList.this, settings.class);
+            toSettings.putExtra("sampleObject",temp);
+            startActivity(toSettings);
+        }else{
+            Toast toast = Toast.makeText(getApplicationContext(),
+                    "No scan data received!", Toast.LENGTH_SHORT);
+            toast.show();
+        }
+    }
+
+//
+//    @Override
+//    public void onSaveInstanceState(Bundle outState) {
+//        super.onSaveInstanceState(outState);
+//        outState.putParcelableArrayList(STATE_LIST, adapter.getList());
+//    }
+
+
+//    @Override
+//    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+//        long viewId = view.getId();
+//
+//        if (viewId == R.id.settings) {
+//            Toast.makeText(this, "Button 1 clicked", Toast.LENGTH_SHORT).show();
+//        } else if (viewId == R.id.item_check) {
+//            Toast.makeText(this, "Button 2 clicked", Toast.LENGTH_SHORT).show();
+//        } else {
+//            Toast.makeText(this, "ListView clicked" + id, Toast.LENGTH_SHORT).show();
+//        }
+//    }
+//
+
+
 //
 //    /**
 //     * Functions to save and restore the current state

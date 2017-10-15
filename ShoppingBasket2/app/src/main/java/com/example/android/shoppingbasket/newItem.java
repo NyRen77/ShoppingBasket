@@ -44,9 +44,9 @@ public class newItem extends Activity implements OnClickListener{
         IntentResult scanningResult = IntentIntegrator.parseActivityResult(requestCode, resultCode, intent);
         if (scanningResult != null) {
             barCode = scanningResult.getContents();
-            String scanFormat = scanningResult.getFormatName();
-            formatTxt.setText("FORMAT: " + scanFormat);
-            contentTxt.setText("CONTENT: " + barCode);
+//            String scanFormat = scanningResult.getFormatName();
+//            formatTxt.setText("FORMAT: " + scanFormat);
+//            contentTxt.setText("CONTENT: " + barCode);
         }else{
             Toast toast = Toast.makeText(getApplicationContext(),
                     "No scan data received!", Toast.LENGTH_SHORT);
